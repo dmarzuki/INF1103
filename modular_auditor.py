@@ -39,8 +39,7 @@ def main():
          inventory = process_delivery(inventory, result)
          tax = calculate_tax(result)
          deliveries_processed += 1
-
-         print(f"Delivery of {result} units accepted.Tax owed: {tax}")
+         print("Tax owed: ", round(tax, 2))
 
     generate_report(deliveries_processed, failed_entries)
 
