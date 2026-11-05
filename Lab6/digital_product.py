@@ -5,4 +5,4 @@ class DigitalProduct(Product):
 
     def display_information(self):
         super().display_information()
-        print(f"        Type:")
+        print(f"        Type: Digital   Download Size: {self.__download_size} MB")
