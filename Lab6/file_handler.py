@@ -5,7 +5,8 @@
 import json
 import os
 
-from product import Product
+from physical_product import PhysicalProduct
+from digital_product import DigitalProduct
 from inventory import Inventory
 
 FILE_NAME = "inventory.json"
@@ -25,8 +26,10 @@ def load_inventory(file_name: str = FILE_NAME) -> Inventory:
         return inventory
 
     for item in data:
-        product = Product(item["id"], item["name"], float(item["price"]), int(item["stock"]))
-        inventory.add_product(product)
+        try:
+            inventory.add_product(product_from_dict(item))
+        except (KeyError, ValueError):
+            print("  (Skipped a product that could not be read.)")
     return inventory
 
 
@@ -37,3 +40,15 @@ def save_inventory(inventory: Inventory, file_name: str = FILE_NAME) -> None:
         data.append(product.to_dict())
     with open(file_name, "w") as file:
         json.dump(data, file, indent=4)
+
+def product_from_dict(item: dict):
+    """Rebuild the correct kind of Product from one saved dictionary."""
+    product_type = item.get("type", "physical")
+    product_id = item["id"]
+    name = item["name"]
+    price = float(item["price"])
+    stock = int(item["stock"])
+
+    if product_type == "digital":
+        return DigitalProduct(product_id, name, price, stock, float(item["download_size"]))
+    return PhysicalProduct(product_id, name, price, stock, float(item.get("weight", 0)))

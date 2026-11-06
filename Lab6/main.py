@@ -2,18 +2,18 @@
 # The main program: shows the menu, gets user input,
 # and calls the right Inventory / Product methods.
 
-from product import Product
+from physical_product import PhysicalProduct
+from digital_product import DigitalProduct 
+from can_be_shipped import CanBeShipped
 from file_handler import load_inventory, save_inventory
 
 
-def is_number(text: str) -> bool:
-    """True if the text can be turned into a float, e.g. '25.50'."""
-    try:
-        float(text)
-        return True
-    except ValueError:
+def is_positive_number(text: str) -> bool:
+     """True if the text is a number of 0 or more, e.g. '25.50'."""
+     try:
+        return float(text) >= 0
+     except ValueError:
         return False
-
 
 def print_menu() -> None:
     print("===== Inventory Management System =====")
@@ -26,6 +26,11 @@ def print_menu() -> None:
 
 
 def add_new_product(inventory) -> None:
+    kind = input("Physical or digital product? (P/D): ").strip().upper()
+    if kind not in ("P", "D"):
+        print("Please enter P or D.\n")
+        return
+    
     product_id = input("Enter product ID: ").strip().upper()
     if product_id == "":
         print("Product ID cannot be empty.\n")
@@ -40,7 +45,7 @@ def add_new_product(inventory) -> None:
         return
 
     price_text = input("Enter price: ").strip()
-    if not is_number(price_text) or float(price_text) < 0:
+    if not is_positive_number(price_text) or float(price_text) < 0:
         print("Price must be a positive number.\n")
         return
 
@@ -49,10 +54,21 @@ def add_new_product(inventory) -> None:
         print("Stock must be a whole number of 0 or more.\n")
         return
 
-    product = Product(product_id, name, float(price_text), int(stock_text))
+    if kind == "P":
+        extra = input("Enter weight (kg): ").strip()
+        if not is_positive_number(extra):
+            print("Weight must be a number of 0 or more.\n")
+            return
+        product = PhysicalProduct(product_id, name, float(price_text), int(stock_text), float(extra))
+    else:
+        extra = input("Enter download size (MB): ").strip()
+        if not is_positive_number(extra):
+            print("Download size must be a number of 0 or more.\n")
+            return
+        product = DigitalProduct(product_id, name, float(price_text), int(stock_text), float(extra))
+
     inventory.add_product(product)
     print("Product " + product_id + " added.\n")
-
 
 def update_product_stock(inventory) -> None:
     product_id = input("Enter product ID: ").strip()
@@ -80,7 +96,12 @@ def find_product(inventory) -> None:
     else:
         print()
         product.display_information()
-        print()
+        print("         Fulfilment: " + product.get_fulfilment_info())
+    # only products that signed the CanBeShipped contract have a shipping cost
+    if isinstance(product, CanBeShipped):
+        print(f"         Shipping cost: ${product.calculate_shipping_cost():.2f}")
+    print()
+
 
 
 def main() -> None:
@@ -88,9 +109,9 @@ def main() -> None:
 
     # first run: start with some sample products
     if len(inventory.get_products()) == 0:
-        inventory.add_product(Product("P001", "Laptop", 1200.00, 15))
-        inventory.add_product(Product("P002", "Mouse", 25.50, 40))
-        inventory.add_product(Product("P003", "Keyboard", 49.90, 25))
+        inventory.add_product(PhysicalProduct("P001", "Laptop", 1200.00, 15))
+        inventory.add_product(PhysicalProduct("P002", "Mouse", 25.50, 40))
+        inventory.add_product(DigitalProduct("D003", "Antivirus License", 49.90, 25))
 
     while True:
         print_menu()
