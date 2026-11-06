@@ -1,10 +1,14 @@
 # product.py
 # The Product class: represents and manages ONE product.
 # It does not load or save files, show menus or ask for input (SRP).
+from abc import ABC, abstractmethod
 
-
-class Product:
+class Product(ABC):
     """One item in the store, with its own ID, name, price and stock."""
+    
+    @abstractmethod
+    def get_fulfilment_info(self) -> str:
+        pass
 
     def __init__(self, product_id: str, name: str, price: float, stock: int):
         # double underscore = treat as private; change only through methods
